@@ -76,8 +76,9 @@ impl LocalQuery {
     ) -> io::Result<Metadata> {
         let entry = entry?;
         let meta = entry.metadata().await?;
+        let path = crate::fix_path(entry.path(), abs.as_path());
         Ok(Metadata::default()
-            .set_path(entry.path())
+            .set_path(path)
             .set_is_dir(meta.is_dir())
             .set_mtime(meta.modified().ok().map(|x| x.into()))
             .set_atime(meta.accessed().ok().map(|x| x.into()))

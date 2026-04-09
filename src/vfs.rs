@@ -1,4 +1,5 @@
 use crate::file::VfsReadWrite;
+use crate::fix_path;
 use crate::iterator::LocalQuery;
 use arbhx_core::{
     DataFull, DataRead, DataReadSeek, DataUsage, DataWrite, DataWriteSeek, FilterOptions, Metadata,
@@ -27,25 +28,12 @@ impl LocalVfs {
         Self {
             id: Uuid::new_v4(),
             name: name.as_ref().to_string(),
-            root: root.as_ref().to_path_buf()
+            root: root.as_ref().to_path_buf(),
         }
-    }
-    
-    fn join_force(&self, p: &Path) -> PathBuf {
-        crate::join_force(&self.root, p)
     }
 
-    fn get_relative(path: &Path, abs: &Path) -> PathBuf {
-        match abs.strip_prefix(&path) {
-            Ok(rel) => {
-                if rel.as_os_str().is_empty() {
-                    PathBuf::from("/") // treat same-as-base as root
-                } else {
-                    PathBuf::from("/").join(rel) // prepend "/" for your VFS style
-                }
-            }
-            Err(_) => PathBuf::from(abs), // fallback: return original path if not under base
-        }
+    fn join_force(&self, p: &Path) -> PathBuf {
+        crate::join_force(&self.root, p)
     }
 
     async fn raw_metadata(&self, path: &Path) -> io::Result<Option<Metadata>> {
@@ -53,8 +41,9 @@ impl LocalVfs {
             return Ok(None);
         }
         let meta = tokio::fs::metadata(&path).await?;
+        let path = fix_path(path.to_path_buf(), &self.root);
         let x_meta = Metadata::default()
-            .set_path(Self::get_relative(&self.root, &path))
+            .set_path(path)
             .set_is_dir(meta.is_dir())
             .set_mtime(meta.modified().ok().map(|x| x.into()))
             .set_ctime(meta.created().ok().map(|x| x.into()))
@@ -134,7 +123,8 @@ impl VfsReader for LocalVfs {
         recursive: bool,
         include_root: bool,
     ) -> std::io::Result<Arc<dyn SizedQuery>> {
-        let ret = LocalQuery::new(&self.root, item, opts, recursive, include_root)?;
+        let path = self.join_force(item);
+        let ret = LocalQuery::new(&self.root, &path, opts, recursive, include_root)?;
         Ok(Arc::new(ret))
     }
 }

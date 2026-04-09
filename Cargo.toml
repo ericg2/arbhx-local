@@ -1,6 +1,6 @@
 [package]
 name = "arbhx-local"
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 license = "MIT OR Apache-2.0"
 description = "The local FS layer for Arbhx."
@@ -14,7 +14,7 @@ keywords = ["vfs"]
 arbhx-core = "2"
 uuid = { version = "1.23.0", features = ["serde", "v4"] }
 async-trait = "0.1.89"
-tokio = { version = "1", features = ["fs", "io-util", "rt"] }
+tokio = { version = "1", features = ["full"] }
 chrono = "0.4.44"
 sysinfo = "0.38.4"
 filetime = "0.2.27"
