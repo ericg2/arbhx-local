@@ -1,0 +1,24 @@
+[package]
+name = "arbhx-local"
+version = "0.3.0"
+edition = "2024"
+license = "MIT OR Apache-2.0"
+description = "The local FS layer for Arbhx."
+homepage = "https://ericg2.github.io/"
+repository = "https://github.com/ericg2/arbhx"
+readme = "README.md"
+categories = ["filesystem"]
+keywords = ["vfs"]
+
+[dependencies]
+arbhx-core = "1"
+uuid = { version = "1.23.0", features = ["serde", "v4"] }
+async-trait = "0.1.89"
+tokio = { version = "1", features = ["fs", "io-util", "rt"] }
+chrono = "0.4.44"
+sysinfo = "0.38.4"
+filetime = "0.2.27"
+async-walkdir = "2.1.0"
+dashmap = "6.1.0"
+ignore = "0.4.25"
+futures-lite = "2.6.1"
