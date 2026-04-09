@@ -5,7 +5,9 @@ mod file;
 mod iterator;
 mod util;
 
-pub fn join_force(base: impl AsRef<Path>, p: impl AsRef<Path>) -> PathBuf {
+pub use vfs::LocalVfs;
+
+pub(crate) fn join_force(base: impl AsRef<Path>, p: impl AsRef<Path>) -> PathBuf {
     let mut out = PathBuf::from(base.as_ref());
     for comp in p.as_ref().components() {
         match comp {
