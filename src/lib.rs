@@ -33,8 +33,8 @@ mod tests {
             println!("{:?}", item);
         }
 
-        vfs.create_dir("/test".as_ref()).await.unwrap();
-        vfs.open_read_random("/rider.exe".as_ref()).await;
+        vfs.create_dir("/New folder".as_ref()).await.unwrap();
+     //   vfs.open_read_random("/rider.exe".as_ref()).await;
     }
 }
 
