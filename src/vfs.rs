@@ -23,11 +23,19 @@ pub struct LocalVfs {
 }
 
 impl LocalVfs {
+    pub fn new(name: impl AsRef<str>, root: impl AsRef<Path>) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: name.as_ref().to_string(),
+            root: root.as_ref().to_path_buf()
+        }
+    }
+    
     fn join_force(&self, p: &Path) -> PathBuf {
         crate::join_force(&self.root, p)
     }
 
-    pub fn get_relative(path: &Path, abs: &Path) -> PathBuf {
+    fn get_relative(path: &Path, abs: &Path) -> PathBuf {
         match abs.strip_prefix(&path) {
             Ok(rel) => {
                 if rel.as_os_str().is_empty() {
