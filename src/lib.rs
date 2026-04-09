@@ -10,16 +10,17 @@ pub use vfs::LocalVfs;
 #[cfg(test)]
 mod tests {
     use crate::LocalVfs;
-    use arbhx_core::{VfsReader, VfsWriter};
+    use arbhx_core::{VfsBackend, VfsReader, VfsWriter};
     use futures_lite::StreamExt;
     use std::path::PathBuf;
+    use std::sync::Arc;
 
     #[tokio::test]
     async fn do_test() {
         let base_dir = PathBuf::from("D:\\tmp");
         tokio::fs::create_dir_all(&base_dir).await.unwrap();
 
-        let vfs = LocalVfs::new("test", base_dir.clone());
+        let vfs = Arc::new(LocalVfs::new("test", base_dir.clone()));
         let mut st = vfs
             .read_dir("/".as_ref(), None, true, true)
             .await
@@ -33,6 +34,7 @@ mod tests {
         }
 
         vfs.create_dir("/test".as_ref()).await.unwrap();
+        vfs.open_read_random("/rider.exe".as_ref()).await;
     }
 }
 

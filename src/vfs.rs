@@ -101,14 +101,16 @@ impl VfsBackend for LocalVfs {
 #[async_trait]
 impl VfsReader for LocalVfs {
     async fn open_read_start(&self, item: &Path) -> std::io::Result<Box<dyn DataRead>> {
-        VfsReadWrite::read_start(item).await
+        let path = self.join_force(item);
+        VfsReadWrite::read_start(&path).await
     }
 
     async fn open_read_random(
         &self,
         item: &Path,
     ) -> std::io::Result<Option<Box<dyn DataReadSeek>>> {
-        Ok(Some(VfsReadWrite::read_random(item).await?))
+        let path = self.join_force(item);
+        Ok(Some(VfsReadWrite::read_random(&path).await?))
     }
 
     async fn get_metadata(&self, item: &Path) -> std::io::Result<Option<Metadata>> {
@@ -132,17 +134,20 @@ impl VfsReader for LocalVfs {
 #[async_trait]
 impl VfsWriter for LocalVfs {
     async fn remove_dir(&self, dirname: &Path) -> io::Result<()> {
-        tokio::fs::remove_dir_all(self.join_force(dirname)).await?;
+        let path = self.join_force(dirname);
+        tokio::fs::remove_dir_all(self.join_force(&path)).await?;
         Ok(())
     }
 
     async fn remove_file(&self, filename: &Path) -> io::Result<()> {
-        tokio::fs::remove_file(self.join_force(filename)).await?;
+        let path = self.join_force(filename);
+        tokio::fs::remove_file(self.join_force(&path)).await?;
         Ok(())
     }
 
     async fn create_dir(&self, item: &Path) -> io::Result<()> {
-        tokio::fs::create_dir_all(self.join_force(item)).await?;
+        let path = self.join_force(item);
+        tokio::fs::create_dir_all(self.join_force(&path)).await?;
         Ok(())
     }
 
@@ -152,8 +157,9 @@ impl VfsWriter for LocalVfs {
         mtime: DateTime<Local>,
         atime: DateTime<Local>,
     ) -> std::io::Result<()> {
+        let path = self.join_force(item);
         set_symlink_file_times(
-            self.join_force(item),
+            path,
             FileTime::from_system_time(atime.into()),
             FileTime::from_system_time(mtime.into()),
         )?;
@@ -161,7 +167,8 @@ impl VfsWriter for LocalVfs {
     }
 
     async fn set_length(&self, item: &Path, size: u64) -> std::io::Result<()> {
-        VfsReadWrite::set_length(self.join_force(item), size).await?;
+        let path = self.join_force(item);
+        VfsReadWrite::set_length(path, size).await?;
         Ok(())
     }
 
@@ -184,24 +191,23 @@ impl VfsWriter for LocalVfs {
         item: &Path,
         overwrite: bool,
     ) -> std::io::Result<Box<dyn DataWrite>> {
-        VfsReadWrite::write_append(self.join_force(item), overwrite).await
+        let path = self.join_force(item);
+        VfsReadWrite::write_append(path, overwrite).await
     }
 
     async fn open_write_random(
         &self,
         item: &Path,
     ) -> std::io::Result<Option<Box<dyn DataWriteSeek>>> {
-        Ok(Some(
-            VfsReadWrite::write_random(self.join_force(item)).await?,
-        ))
+        let path = self.join_force(item);
+        Ok(Some(VfsReadWrite::write_random(path).await?))
     }
 }
 
 #[async_trait]
 impl VfsFull for LocalVfs {
     async fn open_full_random(&self, item: &Path) -> std::io::Result<Option<Box<dyn DataFull>>> {
-        Ok(Some(
-            VfsReadWrite::full_random(self.join_force(item)).await?,
-        ))
+        let path = self.join_force(item);
+        Ok(Some(VfsReadWrite::full_random(path).await?))
     }
 }
