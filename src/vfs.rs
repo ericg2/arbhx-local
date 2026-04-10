@@ -3,7 +3,7 @@ use crate::fix_path;
 use crate::iterator::LocalQuery;
 use arbhx_core::{
     DataFull, DataRead, DataReadSeek, DataUsage, DataWrite, DataWriteSeek, FilterOptions, Metadata,
-    SizedQuery, VfsBackend, VfsFull, VfsReader, VfsWriter,
+    SizedQuery, VfsBackend, VfsFull, VfsReader, VfsSeekWriter, VfsWriter,
 };
 use async_trait::async_trait;
 use chrono::{DateTime, Local};
@@ -19,15 +19,13 @@ use uuid::Uuid;
 #[derive(Debug)]
 pub struct LocalVfs {
     id: Uuid,
-    name: String,
     root: PathBuf,
 }
 
 impl LocalVfs {
-    pub fn new(name: impl AsRef<str>, root: impl AsRef<Path>) -> Self {
+    pub fn new(root: impl AsRef<Path>) -> Self {
         Self {
             id: Uuid::new_v4(),
-            name: name.as_ref().to_string(),
             root: root.as_ref().to_path_buf(),
         }
     }
@@ -58,10 +56,6 @@ impl VfsBackend for LocalVfs {
         self.id
     }
 
-    fn name(&self) -> &str {
-        self.name.as_str()
-    }
-
     fn realpath(&self, item: &Path) -> PathBuf {
         self.join_force(item)
     }
@@ -71,6 +65,10 @@ impl VfsBackend for LocalVfs {
     }
 
     fn writer(self: Arc<Self>) -> Option<Arc<dyn VfsWriter>> {
+        Some(self.clone())
+    }
+
+    fn writer_seek(self: Arc<Self>) -> Option<Arc<dyn VfsSeekWriter>> {
         Some(self.clone())
     }
 
@@ -105,12 +103,9 @@ impl VfsReader for LocalVfs {
         VfsReadWrite::read_start(&path).await
     }
 
-    async fn open_read_random(
-        &self,
-        item: &Path,
-    ) -> std::io::Result<Option<Box<dyn DataReadSeek>>> {
+    async fn open_read_seek(&self, item: &Path) -> std::io::Result<Box<dyn DataReadSeek>> {
         let path = self.join_force(item);
-        Ok(Some(VfsReadWrite::read_random(&path).await?))
+        Ok(VfsReadWrite::read_random(&path).await?)
     }
 
     async fn get_metadata(&self, item: &Path) -> std::io::Result<Option<Metadata>> {
@@ -118,7 +113,7 @@ impl VfsReader for LocalVfs {
         self.raw_metadata(&path).await
     }
 
-    async fn read_dir(
+    async fn list(
         &self,
         item: &Path,
         opts: Option<FilterOptions>,
@@ -186,7 +181,7 @@ impl VfsWriter for LocalVfs {
         Ok(())
     }
 
-    async fn open_write_append(
+    async fn open_write(
         &self,
         item: &Path,
         overwrite: bool,
@@ -194,20 +189,20 @@ impl VfsWriter for LocalVfs {
         let path = self.join_force(item);
         VfsReadWrite::write_append(&path, overwrite).await
     }
+}
 
-    async fn open_write_random(
-        &self,
-        item: &Path,
-    ) -> std::io::Result<Option<Box<dyn DataWriteSeek>>> {
+#[async_trait]
+impl VfsSeekWriter for LocalVfs {
+    async fn open_write_seek(&self, item: &Path) -> std::io::Result<Box<dyn DataWriteSeek>> {
         let path = self.join_force(item);
-        Ok(Some(VfsReadWrite::write_random(&path).await?))
+        Ok(VfsReadWrite::write_random(&path).await?)
     }
 }
 
 #[async_trait]
 impl VfsFull for LocalVfs {
-    async fn open_full_random(&self, item: &Path) -> std::io::Result<Option<Box<dyn DataFull>>> {
+    async fn open_full_seek(&self, item: &Path) -> std::io::Result<Box<dyn DataFull>> {
         let path = self.join_force(item);
-        Ok(Some(VfsReadWrite::full_random(&path).await?))
+        Ok(VfsReadWrite::full_random(&path).await?)
     }
 }
