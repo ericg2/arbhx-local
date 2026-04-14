@@ -23,11 +23,13 @@ pub struct LocalVfs {
 }
 
 impl LocalVfs {
-    pub fn new(root: impl AsRef<Path>) -> Self {
-        Self {
+    pub async fn new(root: impl AsRef<Path>) -> io::Result<Self> {
+        let root = root.as_ref();
+        tokio::fs::create_dir_all(root).await?;
+        Ok(Self {
             id: Uuid::new_v4(),
-            root: root.as_ref().to_path_buf(),
-        }
+            root: root.to_path_buf(),
+        })
     }
 
     fn join_force(&self, p: &Path) -> PathBuf {
