@@ -11,7 +11,6 @@ use std::sync::Arc;
 pub struct LocalQuery {
     pub(crate) abs: PathBuf,
     pub(crate) path: PathBuf,
-    pub(crate) opts: FilterOptions,
     pub(crate) sort: SimpleIgnore,
     pub(crate) recursive: bool,
     pub(crate) root: bool,
@@ -31,7 +30,6 @@ impl LocalQuery {
             sort,
             abs: abs.to_path_buf(),
             path: path.to_path_buf(),
-            opts,
             recursive,
             root,
         })
