@@ -23,9 +23,9 @@ pub struct LocalVfs {
 }
 
 impl LocalVfs {
-    pub async fn new(root: impl AsRef<Path>) -> io::Result<Self> {
+    pub fn new(root: impl AsRef<Path>) -> io::Result<Self> {
         let root = root.as_ref();
-        tokio::fs::create_dir_all(root).await?;
+        std::fs::create_dir_all(root)?;
         Ok(Self {
             id: Uuid::new_v4(),
             root: root.to_path_buf(),
